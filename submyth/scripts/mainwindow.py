@@ -285,11 +285,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             text = self.textEdit.toPlainText()
             original = self.openedSrt.parts.iloc[item.row(), item.column()]
             # TODO Check Regex
-            date = pd.to_datetime(text, format='%H:%M:%S,%f')
-            if date != original:
-                self.openedSrt.parts.iloc[item.row(), item.column()] = date
-                self.subTableModel._data.iloc[item.row(), item.column()] = date
-                self.openedSrt.is_changed = True
+            matches = re.findall(r"(\d{1,2}):(\d{1,2}):(\d{1,2}),(\d{1,3})", text)
+            if len(matches) == 1 :
+                if 0 <= int(matches[0][1]) <= 59 and 0 <= int(matches[0][2]) <= 59 :
+                    self.textEdit.setStyleSheet("color: black")
+                    date = pd.to_datetime(text, format='%H:%M:%S,%f')
+                    if date != original:
+                        self.openedSrt.parts.iloc[item.row(), item.column()] = date
+                        self.subTableModel._data.iloc[item.row(), item.column()] = date
+                        self.openedSrt.is_changed = True
+                else:
+                    self.textEdit.setStyleSheet("color: red")
+            else:
+                self.textEdit.setStyleSheet("color: red")
         else:
             text = self.textEdit.toPlainText()
             original = self.openedSrt.parts.iloc[item.row(), item.column()]
