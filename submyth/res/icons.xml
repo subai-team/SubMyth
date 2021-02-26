@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <resource name="Sound" width="20">sound.png</resource>
+    <resource name="Video" width="20">video.png</resource>
+    <resource name="Subtitle" width="20">subtitle.png</resource>
+</resources>

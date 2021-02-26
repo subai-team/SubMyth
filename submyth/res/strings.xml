@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <lang lang="en">
+        <resource name="Title">Sub Myth</resource>
+        <resource name="Loading">Loading ...</resource>
+    </lang>
+</resources>
