@@ -54,6 +54,18 @@ class Srt(File):
     def parsed(self):
         return len(self.parts) > 0
 
+    
+    def save(self):
+        lines = []
+        for index, row in self.parts.iterrows():
+            lines.append(str(index) + "\n")
+            lines.append(row['start'].strftime('%H:%M:%S,%f')[:-3] + " --> " + row['end'].strftime('%H:%M:%S,%f')[:-3] + "\n")
+            lines.append(row['text'] + "\n")
+            lines.append('\n')
+        with open(os.path.join(self.path, self.file_name), "w") as f:
+            f.writelines(lines)
+        self.is_changed = False
+
 
     def __lines_to_part(self, lines):
         part = [0, 0, '']

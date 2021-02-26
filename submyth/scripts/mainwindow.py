@@ -216,7 +216,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
     def actionSaveFileButtonClick(self, s):
-        print(s)
+        indexes = self.listView.selectedIndexes()
+        for index in indexes :
+            f = self.fileListModel.files[index.row()]
+            if type(f) == Srt:
+                f.save()
     
 
     def actionSaveAsFileButtonClick(self, s):
