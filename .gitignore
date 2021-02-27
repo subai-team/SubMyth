@@ -1,3 +1,6 @@
 data/
 .venv/
 *.pyc
+*.smpr
+*.srt
+*.wav
