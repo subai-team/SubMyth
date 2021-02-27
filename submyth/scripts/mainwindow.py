@@ -7,13 +7,14 @@ from PyQt5.QtGui import QImage
 from scripts.file import Srt, SubMythProject, Media
 from scripts import tools
 import pandas as pd
+import pyqtgraph as pg
 
 
 mainwindow_ui_file = "gui/mainwindow.ui"
 Ui_MainWindow, QtBaseClass = uic.loadUiType(mainwindow_ui_file)
-colors = tools.load_colors()
-icons = tools.load_icons()
-strings = tools.load_strings('en')
+colors = None
+icons = None
+strings = None
 
 
 class SubtitleTableModel(QtCore.QAbstractTableModel):
@@ -112,30 +113,41 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
+        # initialize base UI
         self.setupUi(self)
 
+        # Loading resources
+        global colors, icons, strings
+        colors = tools.load_colors()
+        icons = tools.load_icons()
+        strings = tools.load_strings('en')
+        
+        # Change current UI
         self.setWindowTitle(strings["Title"])
         self.textEdit.setEnabled(False)
         
-        # Project menu actions
+        # Set project menu actions
         self.actionNewProject.triggered.connect(self.actionNewProjectButtonClick)
         self.actionOpenProject.triggered.connect(self.actionOpenProjectButtonClick)
         self.actionSaveProject.triggered.connect(self.actionSaveProjectButtonClick)
         self.actionClose.triggered.connect(self.actionCloseButtonClick)
         
-        # File menu actions
+        # Set File menu actions
         self.actionNewFile.triggered.connect(self.actionNewFileButtonClick)
         self.actionOpenFile.triggered.connect(self.actionOpenFileButtonClick)
         self.actionSaveFile.triggered.connect(self.actionSaveFileButtonClick)
         self.actionSaveAsFile.triggered.connect(self.actionSaveAsFileButtonClick)
         self.actionRemove.triggered.connect(self.actionRemoveButtonClick)
 
-
+        # Initialize UI plots
         self.soundPlot.showAxis('left', False)
         self.soundPlot.showAxis('bottom', False)
         self.mainSoundPlot.showAxis('left', False)
         self.mainSoundPlot.showAxis('bottom', False)
+        self.mainSoundPlot.getViewBox().setMouseEnabled(x=True, y=False)
+        self.soundPlot.getViewBox().setMouseEnabled(x=True, y=False)
 
+        # Loading projects
         self.comboBox.currentIndexChanged.connect(self.currentProjectChange)
         self.listView.doubleClicked.connect(self.listViewDoubleClick)
         self.tableView.clicked.connect(self.subTableClick)
@@ -264,6 +276,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     worker = SubtitleWorker(f)
                     worker.signals.finished.connect(self.subtitleParsed)
                     self.threadpool.start(worker)
+            elif type(f) == Media:
+                self.openedMedia = f
+                if f.parsed():
+                    None
+                else:
+                    f.parse()
+                step = int(f.y.shape[0] / 20000)
+                self.mainSoundPlot.plot(f.y[::step])
+                self.lr = pg.LinearRegionItem([400,700])
+                self.lr.setZValue(-10)
+                self.mainSoundPlot.addItem(self.lr)
+                
+                self.soundPlot.plot(f.y[::step])
+                self.lr.sigRegionChanged.connect(self.updatePlot)
+                self.soundPlot.sigXRangeChanged.connect(self.updateRegion)
+                self.updatePlot()
 
 
     def subtitleParsed(self, srt):
@@ -298,6 +326,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         self.openedSrt.parts.iloc[item.row(), item.column()] = date
                         self.subTableModel._data.iloc[item.row(), item.column()] = date
                         self.openedSrt.is_changed = True
+                        self.currentProjectChange(self.comboBox.currentIndex())
                 else:
                     self.textEdit.setStyleSheet("color: red")
             else:
@@ -309,4 +338,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.openedSrt.parts.iloc[item.row(), item.column()] = text
                 self.subTableModel._data.iloc[item.row(), item.column()] = text
                 self.openedSrt.is_changed = True
-        
+                self.currentProjectChange(self.comboBox.currentIndex())
+
+
+    def updatePlot(self):
+        self.soundPlot.setXRange(*self.lr.getRegion(), padding=0)
+
+
+    def updateRegion(self):
+        self.lr.setRegion(self.soundPlot.getViewBox().viewRange()[0])

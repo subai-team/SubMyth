@@ -1,6 +1,18 @@
 import subprocess
 from PyQt5.QtGui import QImage, QColor
 import xml.etree.ElementTree as ET
+import platform
+import os
+
+
+# OS families
+UNIX_LIKE = ['Linux', 'FreeBSD', 'OpenBD']
+WINDOWS = ['Windows']
+OSX = ['Darwin']
+
+# Initialize os variables
+os_type = platform.system()
+home_dir = os.path.expanduser("~")
 
 
 def load_colors():
@@ -62,3 +74,23 @@ def add_file_format(file_name, file_format):
 def convert_to_wav(input):
     command = "ffmpeg -i {0} -ar 22500 -ac 1 /tmp/test.wav"
     subprocess.run(command)
+
+
+def get_config_folder():
+    if os_type in UNIX_LIKE:
+        config_folder = os.path.join(home_dir, '.config/SubMyth')
+    elif os_type in WINDOWS:
+        config_folder = os.path.join(home_dir, '.config/SubMyth')
+    elif os_type in OSX:
+        config_folder = os.path.join(home_dir, 'AppData', 'Local', 'SubMyth')
+    
+    if not os.exists(config_folder):
+        os.mkdir(config_folder)
+    
+    return config_folder
+
+
+def load_ini():
+    config_folder = get_config_folder()
+    ini_file = os.path.join(config_folder, 'settings.ini')
+    print(os.path.exists(ini_file))

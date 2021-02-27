@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 import pickle
 import os
+from scipy.io import wavfile
 
 
 class File:
@@ -92,10 +93,15 @@ class Media(File):
 
     def __init__(self, file_name, path, is_changed = False):
         super().__init__(file_name, path, is_changed)
+        self.y = []
 
 
-    def sth(self):
-        pass
+    def parsed(self):
+        return len(self.y) > 0
+
+    
+    def parse(self):
+        _, self.y = wavfile.read(os.path.join(self.path, self.file_name))
 
 
 class SubMythProject:
